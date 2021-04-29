@@ -9,12 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.blankj.utilcode.util.NetworkUtils
 import com.jizhi.autologin.databinding.ActivityMainBinding
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import rxhttp.RxHttp
-import rxhttp.await
-import java.io.File
-import kotlin.concurrent.thread
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
