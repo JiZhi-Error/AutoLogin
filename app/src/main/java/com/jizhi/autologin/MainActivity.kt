@@ -40,6 +40,15 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
             binding.etUsername.setText(username)
             binding.etPassword.setText(password)
+            RxHttp.postForm("/portal3/portal.jsp")
+                .add("username", username)
+                .add("password", password)
+                .add("wlanuserip", NetworkUtils.getIpAddressByWifi())
+                .add("func", "Login")
+                .asString()
+                .subscribe {
+                    Log.i(TAG, "onClick: $it")
+                }
         }
     }
 
