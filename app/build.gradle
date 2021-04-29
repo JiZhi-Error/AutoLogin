@@ -3,6 +3,13 @@ plugins {
     id 'kotlin-android'
 }
 
+// 加载本地keystore.properties中的签名配置
+def keyPropertiesFile = rootProject.file("keystore.properties")
+def keyProperties = new Properties()
+if (keyPropertiesFile.exists()) {
+    keyProperties.load(new FileInputStream(keyPropertiesFile))
+}
+
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
@@ -17,10 +24,28 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    buildTypes {
+
+    signingConfigs {
         release {
-            minifyEnabled false
+            storeFile file("../jizhi.jks")
+            storePassword keyProperties.containsKey("KEYSTORE_PASS") ? keyProperties['KEYSTORE_PASS'] : System.getenv("KEYSTORE_PASS")
+            keyAlias keyProperties.containsKey("ALIAS_NAME") ? keyProperties['ALIAS_NAME'] : System.getenv("ALIAS_NAME")
+            keyPassword keyProperties.containsKey("ALIAS_PASS") ? keyProperties['ALIAS_PASS'] : System.getenv("ALIAS_PASS")
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
+        release {
+            zipAlignEnabled true
+            debuggable false
+            minifyEnabled true //是否混淆
+            shrinkResources true //是否去除无效的资源文件
+            multiDexEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
@@ -30,6 +55,12 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+
 }
 
 dependencies {
