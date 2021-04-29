@@ -1,6 +1,7 @@
 package com.jizhi.autologin
 
 import android.content.Context
+import android.content.IntentFilter
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.blankj.utilcode.util.NetworkUtils
 import com.jizhi.autologin.databinding.ActivityMainBinding
 import rxhttp.RxHttp
+import kotlin.system.exitProcess
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -26,30 +28,44 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         sp = getSharedPreferences("login", Context.MODE_PRIVATE)
 
         initView()
+        val wifiStateChangedBroadcastReceiver = WIFIStateChangedBroadcastReceiver()
+        val intentFilter = IntentFilter("android.net.wifi.STATE_CHANGE")
+        registerReceiver(wifiStateChangedBroadcastReceiver,intentFilter)
+    }
 
-        binding.tvCurrentIp.text = NetworkUtils.getIpAddressByWifi()
+    override fun onStart() {
+        super.onStart()
+        val username = sp.getString("username", "")
+        val password = sp.getString("password", "")
+        if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
+            binding.etUsername.setText(username)
+            binding.etPassword.setText(password)
 
+        }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (NetworkUtils.isWifiConnected()) {
+            binding.tvCurrentIp.text = NetworkUtils.getIpAddressByWifi()
+            NetworkUtils.isWifiAvailableAsync {
+                if (it) {
+                    binding.tvWifiState.text = "WiFi可用"
+                }else{
+                    binding.tvWifiState.text = "WIFI不可用"
+                }
+            }
+
+        } else {
+            binding.tvWifiState.text = "WiFi未链接"
+        }
     }
 
 
     private fun initView() {
         binding.butLogIn.setOnClickListener(this)
         binding.butLogOut.setOnClickListener(this)
-        val username = sp.getString("username", "")
-        val password = sp.getString("password", "")
-        if (!username.isNullOrBlank() && !password.isNullOrBlank()) {
-            binding.etUsername.setText(username)
-            binding.etPassword.setText(password)
-            RxHttp.postForm("/portal3/portal.jsp")
-                .add("username", username)
-                .add("password", password)
-                .add("wlanuserip", NetworkUtils.getIpAddressByWifi())
-                .add("func", "Login")
-                .asString()
-                .subscribe {
-                    Log.i(TAG, "onClick: $it")
-                }
-        }
     }
 
     override fun onClick(v: View) {
@@ -64,14 +80,14 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     editor.apply()
 
                     RxHttp.postForm("/portal3/portal.jsp")
-                        .add("username", username)
-                        .add("password", password)
-                        .add("wlanuserip", NetworkUtils.getIpAddressByWifi())
-                        .add("func", "Login")
-                        .asString()
-                        .subscribe {
-                            Log.i(TAG, "onClick: $it")
-                        }
+                            .add("username", username)
+                            .add("password", password)
+                            .add("wlanuserip", NetworkUtils.getIpAddressByWifi())
+                            .add("func", "Login")
+                            .asString()
+                            .subscribe {
+                                Log.i(TAG, "onClick: $it")
+                            }
 
                 } else {
                     Toast.makeText(this, "用户名或密码为空", Toast.LENGTH_SHORT).show()
@@ -82,5 +98,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+//        exitProcess(0)
     }
 }

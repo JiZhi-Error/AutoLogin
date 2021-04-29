@@ -12,11 +12,6 @@ class Url {
 
     companion object {
         @DefaultDomain
-        @JvmField
-        val baseUrl = "http://27.129.43.18/"
+        const val baseUrl = "http://27.129.43.18/"
     }
-////    @DefaultDomain //设置为默认域名
-//    @JvmStatic
-//    @JvmField
-//    var baseUrl = "http://27.129.43.18/"
 }
